@@ -21,6 +21,12 @@ const userSchema = new mongoose.Schema(
       default: "user",
     },
     salt: String,
+    otp: {
+      type: String,
+    },
+    otpExpiry: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );
@@ -38,6 +44,16 @@ userSchema.pre("save", async function (next) {
   this.salt = await bcrypt.genSalt(10);
   this.confirmPassword = await bcrypt.hash(this._password, this.salt);
   next();
+});
+
+// dynamic list of roles
+let roles = ["admin", "user", "vendor", "buyers"];
+userSchema.pre("save", function (next) {
+  if (roles.includes(this.role)) {
+    next();
+  } else {
+    next("role is not defined");
+  }
 });
 
 const UserModel = new mongoose.model("UserModel", userSchema);
